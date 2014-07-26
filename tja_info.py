@@ -82,11 +82,11 @@ class TJAInfo(object):
         for key, val in self.headers.items():
             if isinstance(val, list) or key[0].islower() or key.startswith("SUB"):
                 continue
-            tja += "{0}:{1}\r\n".format(key, val)
-        tja += "COURSE:{0}\r\n".format(course)
-        tja += "LEVEL:{0}\r\n".format(self.headers["LEVELS"][course])
-        tja += "BALLOON:{0}\r\n".format(",".join([str(c) for c in self.headers["BALLOONS"][course]]))
-        tja += "#START\r\n"
+            tja += "{0}:{1}\n".format(key, val)
+        tja += "COURSE:{0}\n".format(course)
+        tja += "LEVEL:{0}\n".format(self.headers["LEVELS"][course])
+        tja += "BALLOON:{0}\n".format(",".join([str(c) for c in self.headers["BALLOONS"][course]]))
+        tja += "#START\n"
         for section in self.beatmaps[course]:
             if len(section) == 0:
                 tja += str(NoteTypes.none.value)
@@ -95,10 +95,54 @@ class TJAInfo(object):
                     tja += str(note.value)
                 else:
                     tja += str(note)
-            tja += ",\r\n"
-        tja += "\r\n#END"
-        tja = sub("\r+", "", tja)
+            tja += ",\n"
+        tja += "\n#END"
         tja = sub("\n+", "\n", tja)
+        return tja
+
+    def get_beautiful_tja(self):
+        tja = ""
+        head_keys = ["TITLE", "SUBTITLE", "WAVE", "BPM", "OFFSET"]
+
+        for key in head_keys:
+            if key in self.headers:
+                tja += "{0}:{1}\n".format(key, self.headers[key])
+        for key, val in self.headers.items():
+            if isinstance(val, list) or key[0].islower() or key in head_keys:
+                continue
+            tja += "{0}:{1}\n".format(key, val)
+
+        tja += "\n"
+
+        for course, level in enumerate(self.headers["LEVELS"]):
+            if level is None:
+                continue
+            tja += "COURSE:{0}\n".format(course)
+            tja += "LEVEL:{0}\n".format(level)
+            tja += "BALLOON:{0}\n".format(",".join([str(c) for c in self.headers["BALLOONS"][course]]))
+            tja += "#START\n"
+            for section in self.beatmaps[course]:
+                pos = 0
+                cut_interval = 16
+                if len(section) == 0:
+                    tja += str(NoteTypes.none.value)
+                else:
+                    note_len = 0
+                    for note in section:
+                        if isinstance(note, NoteTypes):
+                            note_len += 1
+                    if note_len % 12 == 0:
+                        cut_interval = 12
+                for index, note in enumerate(section):
+                    if isinstance(note, NoteTypes):
+                        tja += str(note.value)
+                        pos += 1
+                        if pos and pos % cut_interval == 0 and index + 1 != len(section):
+                            tja += "\n"
+                    else:
+                        tja += str(note)
+                tja += ",\n"
+            tja += "\n#END"
         return tja
 
     def __get_donscore_details_text(self, course):
@@ -195,6 +239,8 @@ class TJAInfo(object):
                 continue
             elif line.startswith("#END"):
                 if is_parsing:
+                    if parse_course is None:
+                        parse_course = 3
                     beatmaps[parse_course] = parse_beatmap.copy()
                     parse_beatmap.clear()
                     is_parsing = False
@@ -387,7 +433,7 @@ class BPMChange(object):
         self.new_bpm = new_bpm
 
     def __str__(self):
-        return "\r\n#BPMCHANGE {0}\r\n".format(self.new_bpm)
+        return "\n#BPMCHANGE {0}\n".format(self.new_bpm)
 
 
 class ScrollChange(object):
@@ -395,7 +441,7 @@ class ScrollChange(object):
         self.new_hs = new_hs
 
     def __str__(self):
-        return "\r\n#SCROLL {0}\r\n".format(self.new_hs)
+        return "\n#SCROLL {0}\n".format(self.new_hs)
 
 
 class Gogotime(object):
@@ -403,7 +449,7 @@ class Gogotime(object):
         self.is_end = is_end
 
     def __str__(self):
-        return "\r\n#GOGOEND\r\n" if self.is_end else "\r\n#GOGOSTART\r\n"
+        return "\n#GOGOEND\n" if self.is_end else "\n#GOGOSTART\n"
 
 
 class Balloon(object):
@@ -423,5 +469,5 @@ class Measure(object):
             magic = 4 / self.value.denominator
             den = round(self.value.denominator * magic)
             num = round(self.value.numerator * magic)
-            return "\r\n#MEASURE {0}/{1}\r\n".format(num, den)
-        return "\r\n#MEASURE {0}\r\n".format(self.value)
+            return "\n#MEASURE {0}/{1}\n".format(num, den)
+        return "\n#MEASURE {0}\n".format(self.value)
