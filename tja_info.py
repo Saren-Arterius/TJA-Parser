@@ -53,12 +53,17 @@ class TJAInfo(object):
                 copyfile(join(tools_path, file), join(temp_working_dir, file))
             else:
                 call(["ln", "-s", join(tools_path, file), join(temp_working_dir, file)])
-
-        call(["python3", join(TJAInfo.working_dir, TJAInfo.donscore_helper_py), temp_working_dir, temp_tja_path])
+        try:
+            call(["python3", join(TJAInfo.working_dir, TJAInfo.donscore_helper_py), temp_working_dir, temp_tja_path])
+        except FileNotFoundError:
+            call(["python", join(TJAInfo.working_dir, TJAInfo.donscore_helper_py), temp_working_dir, temp_tja_path])
 
         donscore = Image.open(join(temp_working_dir, "convert.png"))
 
-        rmtree(temp_working_dir)
+        try:
+            rmtree(temp_working_dir)
+        except IOError:
+            pass
 
         for x in range(816):
             for y in range(60):
