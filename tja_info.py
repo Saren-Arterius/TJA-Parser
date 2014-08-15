@@ -253,6 +253,7 @@ class TJAInfo(object):
         parse_course = None
         is_parsing = False
         in_renda = False
+        previous_note = NoteTypes.NONE
         for line in self.tja.splitlines():
             if not len(line):
                 continue
@@ -288,17 +289,22 @@ class TJAInfo(object):
                     try:
                         for note in findall("\d+", line)[0]:
                             try:
-                                if in_renda and NoteTypes(int(note)) not in [NoteTypes.RENDA_STOP, NoteTypes.NONE]:
-                                    section[-1] = NoteTypes.RENDA_STOP
-                                    in_renda = False
-                                section.append(NoteTypes(int(note)))
+                                if in_renda and NoteTypes(int(note)) in [NoteTypes.RENDA_START,
+                                                                         NoteTypes.BIG_RENDA_START,
+                                                                         NoteTypes.BALLOON] and previous_note == NoteTypes(
+                                        int(note)):
+                                    section.append(NoteTypes.NONE)
+                                else:
+                                    section.append(NoteTypes(int(note)))
                                 if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START,
                                                             NoteTypes.BALLOON]:
                                     in_renda = True
                                 elif NoteTypes(int(note)) == NoteTypes.RENDA_STOP:
                                     in_renda = False
+                                previous_note = NoteTypes(int(note))
                             except ValueError:
                                 section.append(NoteTypes.RENDA_STOP)
+                                previous_note = NoteTypes(int(note))
                                 in_renda = False
                     except IndexError:
                         pass
@@ -317,23 +323,29 @@ class TJAInfo(object):
                         measure = findall("(\d+)/(\d+)", line)[0]
                         section.append(Measure(Fraction(int(measure[0]), int(measure[1]))))
                 else:
-                    try:
-                        for note in findall("\d+", line)[0]:
-                            try:
-                                if in_renda and NoteTypes(int(note)) not in [NoteTypes.RENDA_STOP, NoteTypes.NONE]:
-                                    section[-1] = NoteTypes.RENDA_STOP
+                    if "," in line:
+                        try:
+                            for note in findall("\d+", line)[0]:
+                                try:
+                                    if in_renda and NoteTypes(int(note)) in [NoteTypes.RENDA_START,
+                                                                             NoteTypes.BIG_RENDA_START,
+                                                                             NoteTypes.BALLOON] and previous_note == NoteTypes(
+                                            int(note)):
+                                        section.append(NoteTypes.NONE)
+                                    else:
+                                        section.append(NoteTypes(int(note)))
+                                    if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START,
+                                                                NoteTypes.BALLOON]:
+                                        in_renda = True
+                                    elif NoteTypes(int(note)) == NoteTypes.RENDA_STOP:
+                                        in_renda = False
+                                    previous_note = NoteTypes(int(note))
+                                except ValueError:
+                                    section.append(NoteTypes.RENDA_STOP)
+                                    previous_note = NoteTypes(int(note))
                                     in_renda = False
-                                section.append(NoteTypes(int(note)))
-                                if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START,
-                                                            NoteTypes.BALLOON]:
-                                    in_renda = True
-                                elif NoteTypes(int(note)) == NoteTypes.RENDA_STOP:
-                                    in_renda = False
-                            except ValueError:
-                                section.append(NoteTypes.RENDA_STOP)
-                                in_renda = False
-                    except IndexError:
-                        pass
+                        except IndexError:
+                            pass
 
         if parse_course is None and parse_beatmap != []:
             beatmaps[3] = parse_beatmap
@@ -349,6 +361,7 @@ class TJAInfo(object):
                         except IndexError:
                             beatmaps[course][index][index2] = Balloon(
                                 self.headers["BALLOONS"][course][-1])
+                            self.headers["BALLOONS"][course].append(self.headers["BALLOONS"][course][-1])
         return beatmaps
 
     def __simulate_play(self):
