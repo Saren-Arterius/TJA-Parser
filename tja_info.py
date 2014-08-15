@@ -9,9 +9,8 @@ from os import makedirs, listdir, name as osname
 
 from math import floor
 
-
 class TJAInfo(object):
-    renda_hits_per_second = 18
+
     working_dir = dirname(abspath(__file__))
     executables_path = "executables"
     temp_path = "tmp"
@@ -21,6 +20,7 @@ class TJAInfo(object):
 
     def __init__(self, tja):
         self.tja = tja
+        self.renda_hits_per_second = 18
         self.headers = self.__parse_headers()
         self.beatmaps = self.__parse_beatmaps()
         self.simulate_results = self.__simulate_play()
@@ -132,7 +132,7 @@ class TJAInfo(object):
             tja += "LEVEL:{0}\n".format(level)
             tja += "BALLOON:{0}\n".format(",".join([str(c) for c in self.headers["BALLOONS"][course]]))
             tja += "#START\n"
-            current_measure = 1
+            cut_interval = 16 * current_measure
             for section in self.beatmaps[course]:
                 pos = 0
                 if len(section) == 0:
@@ -227,7 +227,7 @@ class TJAInfo(object):
             keyval = findall("([A-Z]+):(.*)", line)[0]
             if keyval[0] == "BALLOON":
                 try:
-                    parse_balloons = [int(hit_count) for hit_count in keyval[1].split(",")]
+                    parse_balloons = [int(hit_count) for hit_count in str(keyval[1]).split(",")]
                 except ValueError:
                     pass
             elif keyval[0] == "COURSE":
@@ -251,7 +251,10 @@ class TJAInfo(object):
         for line in self.tja.splitlines():
             if not len(line):
                 continue
-            if line.startswith("//"):
+            if line.startswith("/"):
+                renda = findall("//RENDA\s*(\d+)", line)
+                if len(renda):
+                    self.renda_hits_per_second = renda[0]
                 continue
             keyval = findall("([A-Z]+):(.*)", line)
             if len(keyval) and keyval[0][0] == "COURSE":
@@ -359,7 +362,7 @@ class TJAInfo(object):
                         renda_type = note
                     elif note == NoteTypes.renda_stop:
                         factor = 1.2 if in_gogo else 1
-                        renda_hits = floor((current_time - renda_start) * TJAInfo.renda_hits_per_second)
+                        renda_hits = floor((current_time - renda_start) * self.renda_hits_per_second)
                         if renda_type == NoteTypes.renda_start:
                             extra_scores.append(renda_hits * 300 * factor)
                         elif renda_type == NoteTypes.renda_big_start:
@@ -423,6 +426,7 @@ class TJAInfo(object):
     @staticmethod
     def get_max_note_score(course, level, init_times, diff_times, extra_score):
         scores = {}
+        max_score = 0
         if course == 0:
             max_score = 280000 + level * 20000
         elif course == 1:
