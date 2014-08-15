@@ -135,7 +135,6 @@ class TJAInfo(object):
             current_measure = 1
             for section in self.beatmaps[course]:
                 pos = 0
-                cut_interval = 16
                 if len(section) == 0:
                     tja += str(NoteTypes.none.value)
                 else:
@@ -143,13 +142,14 @@ class TJAInfo(object):
                     for note in section:
                         if isinstance(note, NoteTypes):
                             note_len += 1
+                        elif isinstance(note, Measure):
+                            current_measure = note.value
                     if note_len % int(16 * current_measure / 4 * 3) == 0:
                         cut_interval = 16 * current_measure / 4 * 3
+                    else:
+                        cut_interval = 16 * current_measure
                 for index, note in enumerate(section):
-                    if isinstance(note, Measure):
-                        current_measure = note.value
-                        tja += str(note)
-                    elif isinstance(note, NoteTypes):
+                    if isinstance(note, NoteTypes):
                         tja += str(note.value)
                         pos += 1
                         if pos and pos % cut_interval == 0 and index + 1 != len(section):
