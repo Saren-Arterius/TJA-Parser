@@ -166,9 +166,12 @@ class TJAInfo(object):
         level_star = "★"
         empty_star = "☆"
         course_level = (course, self.headers["LEVELS"][course])
-        stars_text = level_star * course_level[1] if course_level[1] < course_max_level[
-            course_level[0]] else level_star * course_max_level[course_level[0]]
-        stars_text += empty_star * (course_max_level[course_level[0]] - course_level[1])
+        if self.headers["LEVELS"][course] in range(13):
+            stars_text = level_star * course_level[1] if course_level[1] < course_max_level[
+                course_level[0]] else level_star * course_max_level[course_level[0]]
+            stars_text += empty_star * (course_max_level[course_level[0]] - course_level[1])
+        else:
+            stars_text = "{0} x {1}".format(level_star, self.headers["LEVELS"][course])
         return "{0} {1}".format(course_text[course_level[0]], stars_text)
 
     def __parse_headers(self):
@@ -198,7 +201,10 @@ class TJAInfo(object):
             if keyval[0] == "COURSE":
                 parse_course = TJAInfo.parse_course(keyval[1])
             elif keyval[0] == "LEVEL":
-                parse_level = int(keyval[1])
+                try:
+                    parse_level = 1 if int(keyval[1]) < 1 else int(keyval[1])
+                except ValueError:
+                    parse_level = 1
             else:
                 continue
             if parse_course is not None and parse_level is not None:
