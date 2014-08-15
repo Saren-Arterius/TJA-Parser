@@ -100,7 +100,7 @@ class TJAInfo(object):
         tja += "#START\n"
         for section in self.beatmaps[course]:
             if len(section) == 0:
-                tja += str(NoteTypes.none.value)
+                tja += str(NoteTypes.NONE.value)
             for note in section:
                 if isinstance(note, NoteTypes):
                     tja += str(note.value)
@@ -137,7 +137,7 @@ class TJAInfo(object):
             for section in self.beatmaps[course]:
                 pos = 0
                 if len(section) == 0:
-                    tja += str(NoteTypes.none.value)
+                    tja += str(NoteTypes.NONE.value)
                 else:
                     note_len = 0
                     for note in section:
@@ -249,6 +249,7 @@ class TJAInfo(object):
         section = []
         parse_course = None
         is_parsing = False
+        in_renda = False
         for line in self.tja.splitlines():
             if not len(line):
                 continue
@@ -281,8 +282,10 @@ class TJAInfo(object):
                         for note in findall("\d+", line)[0]:
                             try:
                                 section.append(NoteTypes(int(note)))
+                                if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
+                                    in_renda = True
                             except ValueError:
-                                section.append(NoteTypes.renda_stop)
+                                section.append(NoteTypes.RENDA_STOP)
                     except IndexError:
                         pass
                     parse_beatmap.append(section.copy())
@@ -304,8 +307,10 @@ class TJAInfo(object):
                         for note in findall("\d+", line)[0]:
                             try:
                                 section.append(NoteTypes(int(note)))
+                                if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
+                                    in_renda = True
                             except ValueError:
-                                section.append(NoteTypes.renda_stop)
+                                section.append(NoteTypes.RENDA_STOP)
                     except IndexError:
                         pass
 
@@ -315,7 +320,7 @@ class TJAInfo(object):
             balloon_position = 0
             for index, section in enumerate(beatmap):
                 for index2, note in enumerate(section):
-                    if note == NoteTypes.balloon:
+                    if note == NoteTypes.BALLOON:
                         try:
                             beatmaps[course][index][index2] = Balloon(
                                 self.headers["BALLOONS"][course][balloon_position])
@@ -357,23 +362,23 @@ class TJAInfo(object):
                     elif isinstance(note, NoteTypes) or isinstance(note, Balloon):
                         current_time += (60 / current_bpm) / (section_length / 4) * current_measure
 
-                    if note in [NoteTypes.red, NoteTypes.blue, NoteTypes.big_red, NoteTypes.big_blue]:
+                    if note in [NoteTypes.RED, NoteTypes.BLUE, NoteTypes.BIG_RED, NoteTypes.BIG_BLUE]:
                         max_combo += 1
                         diff_ratio = max_combo / 10 if max_combo % 10 == 0 and max_combo <= 100 else diff_ratio
                         factor = 1.2 if in_gogo else 1
-                        if note in [NoteTypes.big_red, NoteTypes.big_blue]:
+                        if note in [NoteTypes.BIG_RED, NoteTypes.BIG_BLUE]:
                             factor *= 2
                         init_times += factor
                         diff_times += diff_ratio * factor
-                    elif note in [NoteTypes.renda_start, NoteTypes.renda_big_start] or isinstance(note, Balloon):
+                    elif note in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START] or isinstance(note, Balloon):
                         renda_start = current_time
                         renda_type = note
-                    elif note == NoteTypes.renda_stop:
+                    elif note == NoteTypes.RENDA_STOP:
                         factor = 1.2 if in_gogo else 1
                         renda_hits = floor((current_time - renda_start) * self.renda_hits_per_second)
-                        if renda_type == NoteTypes.renda_start:
+                        if renda_type == NoteTypes.RENDA_START:
                             extra_scores.append(renda_hits * 300 * factor)
-                        elif renda_type == NoteTypes.renda_big_start:
+                        elif renda_type == NoteTypes.BIG_RENDA_START:
                             extra_scores.append(renda_hits * 360 * factor)
                         elif isinstance(renda_type, Balloon):
                             if renda_type.count <= renda_hits:
@@ -459,15 +464,15 @@ class TJAInfo(object):
 
 
 class NoteTypes(Enum):
-    none = 0
-    red = 1
-    blue = 2
-    big_red = 3
-    big_blue = 4
-    renda_start = 5
-    renda_big_start = 6
-    balloon = 7
-    renda_stop = 8
+    NONE = 0
+    RED = 1
+    BLUE = 2
+    BIG_RED = 3
+    BIG_BLUE = 4
+    RENDA_START = 5
+    BIG_RENDA_START = 6
+    BALLOON = 7
+    RENDA_STOP = 8
 
 
 class BPMChange(object):
