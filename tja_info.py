@@ -253,9 +253,12 @@ class TJAInfo(object):
             if not len(line):
                 continue
             if line.startswith("/"):
-                renda = findall("//RENDA\s*(\d+)", line)
+                renda = findall("//RENDA\s*(.+)", line)
                 if len(renda):
-                    self.renda_hits_per_second = renda[0]
+                    try:
+                        self.renda_hits_per_second = float(renda[0])
+                    except ValueError:
+                        pass
                 continue
             keyval = findall("([A-Z]+):(.*)", line)
             if len(keyval) and keyval[0][0] == "COURSE":
