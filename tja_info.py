@@ -284,9 +284,13 @@ class TJAInfo(object):
                 else:
                     try:
                         for note in findall("\d+", line)[0]:
-                            section.append(NoteTypes(int(note)))
+                            try:
+                                section.append(NoteTypes(int(note)))
+                            except ValueError:
+                                section.append(NoteTypes(0))
                     except IndexError:
                         pass
+
         if parse_course is None and parse_beatmap != []:
             beatmaps[3] = parse_beatmap
         for course, beatmap in enumerate(beatmaps):
