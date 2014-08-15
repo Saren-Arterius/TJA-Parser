@@ -251,6 +251,8 @@ class TJAInfo(object):
         for line in self.tja.splitlines():
             if not len(line):
                 continue
+            if line.startswith("//"):
+                continue
             keyval = findall("([A-Z]+):(.*)", line)
             if len(keyval) and keyval[0][0] == "COURSE":
                 parse_course = TJAInfo.parse_course(keyval[0][1])
