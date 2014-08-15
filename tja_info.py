@@ -438,15 +438,17 @@ class TJAInfo(object):
     def compress_section(section):
         new_section = []
         start_pos = 0
-        min_dist = len(section)
+        distances = []
         note_pos = 0
+        min_interval = len(section)
         for note in section:
             if note_pos != start_pos and isinstance(note, NoteTypes) and note != NoteTypes.NONE:
-                min_dist = note_pos - start_pos if note_pos - start_pos < min_dist else min_dist
+                distances.append(note_pos - start_pos)
                 start_pos = note_pos
             if isinstance(note, NoteTypes):
                 note_pos += 1
-        min_interval = gcd(min_dist, len(section))
+        if len(distances):
+            min_interval = TJAInfo.multi_gcd(distances)
         note_pos = 0
         for note in section:
             if not isinstance(note, NoteTypes):
@@ -454,10 +456,19 @@ class TJAInfo(object):
                 continue
             if note_pos % min_interval == 0:
                 new_section.append(note)
-                pass
             if isinstance(note, NoteTypes):
                 note_pos += 1
         return new_section
+
+    @staticmethod
+    def multi_gcd(i):
+        if len(i) == 1:
+            return i[0]
+        while len(i) > 2:
+            result = gcd(i[-1], i[-2])
+            i.pop(len(i) - 1)
+            i[-1] = result
+        return gcd(i[0], i[1])
 
     @staticmethod
     def parse_course(course):
