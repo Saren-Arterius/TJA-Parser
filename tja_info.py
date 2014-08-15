@@ -9,8 +9,8 @@ from os import makedirs, listdir, name as osname
 
 from math import floor
 
-class TJAInfo(object):
 
+class TJAInfo(object):
     working_dir = dirname(abspath(__file__))
     executables_path = "executables"
     temp_path = "tmp"
@@ -316,9 +316,13 @@ class TJAInfo(object):
             for index, section in enumerate(beatmap):
                 for index2, note in enumerate(section):
                     if note == NoteTypes.balloon:
-                        beatmaps[course][index][index2] = Balloon(
-                            self.headers["BALLOONS"][course][balloon_position])
-                        balloon_position += 1
+                        try:
+                            beatmaps[course][index][index2] = Balloon(
+                                self.headers["BALLOONS"][course][balloon_position])
+                            balloon_position += 1
+                        except IndexError:
+                            beatmaps[course][index][index2] = Balloon(
+                                self.headers["BALLOONS"][course][-1])
         return beatmaps
 
     def __simulate_play(self):
