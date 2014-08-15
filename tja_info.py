@@ -264,7 +264,10 @@ class TJAInfo(object):
                 if "," in line:
                     try:
                         for note in findall("\d+", line)[0]:
-                            section.append(NoteTypes(int(note)))
+                            try:
+                                section.append(NoteTypes(int(note)))
+                            except ValueError:
+                                section.append(NoteTypes.renda_stop)
                     except IndexError:
                         pass
                     parse_beatmap.append(section.copy())
@@ -287,7 +290,7 @@ class TJAInfo(object):
                             try:
                                 section.append(NoteTypes(int(note)))
                             except ValueError:
-                                section.append(NoteTypes(0))
+                                section.append(NoteTypes.renda_stop)
                     except IndexError:
                         pass
 
