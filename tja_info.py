@@ -349,7 +349,8 @@ class TJAInfo(object):
         if parse_course is None and parse_beatmap != []:
             beatmaps[3] = parse_beatmap
         for course, beatmap in enumerate(beatmaps):
-            near_notes = [[0, 0]] * 3
+            last_none_note_pos = [0, 0]
+            last_note_pos = [0, 0]
             in_renda = False
             balloon_position = 0
             for index, section in enumerate(beatmap):
@@ -363,16 +364,19 @@ class TJAInfo(object):
                             beatmaps[course][index][index2] = Balloon(
                                 self.headers["BALLOONS"][course][-1])
                             self.headers["BALLOONS"][course].append(self.headers["BALLOONS"][course][-1])
-                    near_notes.pop(0)
-                    near_notes.append([index, index2])
                     if in_renda and note not in [NoteTypes.RENDA_STOP, NoteTypes.NONE]:
-                        if len(beatmaps[course][near_notes[1][0]]) == 1:
-                            beatmaps[course][near_notes[1][0]].append(NoteTypes.RENDA_STOP)
+                        if beatmaps[course][last_none_note_pos[0]][last_none_note_pos[1]] != NoteTypes.NONE:
+                            for i in range(7 - len(beatmaps[course][last_note_pos[0]])):
+                                beatmaps[course][last_note_pos[0]].append(NoteTypes.NONE)
+                            beatmaps[course][last_note_pos[0]].append(NoteTypes.RENDA_STOP)
                         else:
-                            beatmaps[course][near_notes[1][0]][near_notes[1][1]] = NoteTypes.RENDA_STOP
+                            beatmaps[course][last_none_note_pos[0]][last_none_note_pos[1]] = NoteTypes.RENDA_STOP
                         in_renda = False
-                    elif note in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
+                    if note in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
                         in_renda = True
+                    if note == NoteTypes.NONE:
+                        last_none_note_pos = [index, index2]
+                    last_note_pos = [index, index2]
 
         return beatmaps
 
