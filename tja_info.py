@@ -365,7 +365,8 @@ class TJAInfo(object):
                                 self.headers["BALLOONS"][course][-1])
                             self.headers["BALLOONS"][course].append(self.headers["BALLOONS"][course][-1])
                     if in_renda and note not in [NoteTypes.RENDA_STOP, NoteTypes.NONE]:
-                        if beatmaps[course][last_none_note_pos[0]][last_none_note_pos[1]] != NoteTypes.NONE:
+                        if beatmaps[course][last_none_note_pos[0]][last_none_note_pos[1]] not in [NoteTypes.RENDA_STOP,
+                                                                                                  NoteTypes.NONE]:
                             for i in range(7 - len(beatmaps[course][last_note_pos[0]])):
                                 beatmaps[course][last_note_pos[0]].append(NoteTypes.NONE)
                             beatmaps[course][last_note_pos[0]].append(NoteTypes.RENDA_STOP)
