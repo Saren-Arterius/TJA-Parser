@@ -289,7 +289,13 @@ class TJAInfo(object):
                     try:
                         for note in findall("\d+", line)[0]:
                             try:
-                                section.append(NoteTypes(int(note)))
+                                if in_renda and NoteTypes(int(note)) in [NoteTypes.RENDA_START,
+                                                                         NoteTypes.BIG_RENDA_START,
+                                                                         NoteTypes.BALLOON] and previous_note == NoteTypes(
+                                        int(note)):
+                                    section.append(NoteTypes.NONE)
+                                else:
+                                    section.append(NoteTypes(int(note)))
                                 if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START,
                                                             NoteTypes.BALLOON]:
                                     in_renda = True
@@ -321,7 +327,13 @@ class TJAInfo(object):
                         try:
                             for note in findall("\d+", line)[0]:
                                 try:
-                                    section.append(NoteTypes(int(note)))
+                                    if in_renda and NoteTypes(int(note)) in [NoteTypes.RENDA_START,
+                                                                             NoteTypes.BIG_RENDA_START,
+                                                                             NoteTypes.BALLOON] and previous_note == NoteTypes(
+                                            int(note)):
+                                        section.append(NoteTypes.NONE)
+                                    else:
+                                        section.append(NoteTypes(int(note)))
                                     if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START,
                                                                 NoteTypes.BALLOON]:
                                         in_renda = True
@@ -359,14 +371,11 @@ class TJAInfo(object):
                                 beatmaps[course][last_note_pos[0]].append(NoteTypes.NONE)
                             beatmaps[course][last_note_pos[0]].append(NoteTypes.RENDA_STOP)
                         else:
-                            # beatmaps[course][last_none_note_pos[0]][last_none_note_pos[1]] = NoteTypes.RENDA_STOP
-                            pass
+                            beatmaps[course][last_none_note_pos[0]][last_none_note_pos[1]] = NoteTypes.RENDA_STOP
                         in_renda = False
                     if note in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
                         in_renda = True
-                    elif note == NoteTypes.RENDA_STOP:
-                        in_renda = False
-                    elif note == NoteTypes.NONE:
+                    if note == NoteTypes.NONE:
                         last_none_note_pos = [index, index2]
                     last_note_pos = [index, index2]
 
