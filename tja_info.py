@@ -1,11 +1,13 @@
 #!/usr/bin/python3
+from multiprocessing.pool import Pool
 from fractions import Fraction
 from binascii import crc32
 from os.path import dirname, join, abspath
-from math import floor
 from enum import Enum
 from re import findall, sub
 from os import makedirs, listdir, name as osname
+
+from math import floor
 
 
 class TJAInfo(object):
@@ -23,6 +25,10 @@ class TJAInfo(object):
         self.beatmaps = self.__parse_beatmaps()
         self.simulate_results = self.__simulate_play()
         self.headers["bpm_display"] = self.__get_bpm_display()
+
+    def get_all_donscores(self):
+        with Pool(processes = 5) as pool:
+            return pool.map(self.get_donscore_png, range(0, 5))
 
     def get_donscore_png(self, course):
         try:
@@ -126,6 +132,7 @@ class TJAInfo(object):
             tja += "LEVEL:{0}\n".format(level)
             tja += "BALLOON:{0}\n".format(",".join([str(c) for c in self.headers["BALLOONS"][course]]))
             tja += "#START\n"
+            current_measure = 1
             for section in self.beatmaps[course]:
                 pos = 0
                 cut_interval = 16
@@ -136,10 +143,13 @@ class TJAInfo(object):
                     for note in section:
                         if isinstance(note, NoteTypes):
                             note_len += 1
-                    if note_len % 12 == 0:
-                        cut_interval = 12
+                    if note_len % int(16 * current_measure / 4 * 3) == 0:
+                        cut_interval = 16 * current_measure / 4 * 3
                 for index, note in enumerate(section):
-                    if isinstance(note, NoteTypes):
+                    if isinstance(note, Measure):
+                        current_measure = note.value
+                        tja += str(note)
+                    elif isinstance(note, NoteTypes):
                         tja += str(note.value)
                         pos += 1
                         if pos and pos % cut_interval == 0 and index + 1 != len(section):
