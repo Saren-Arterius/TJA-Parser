@@ -275,8 +275,6 @@ class TJAInfo(object):
                 continue
             elif line.startswith("#END"):
                 if is_parsing:
-                    if in_renda:
-                        parse_beatmap[-1][-1] = NoteTypes.RENDA_STOP
                     if parse_course is None:
                         parse_course = 3
                     beatmaps[parse_course] = parse_beatmap.copy()
@@ -288,18 +286,11 @@ class TJAInfo(object):
                     try:
                         for note in findall("\d+", line)[0]:
                             try:
-                                if in_renda and NoteTypes(int(note)) not in [NoteTypes.RENDA_STOP, NoteTypes.NONE]:
-                                    section[-1] = NoteTypes.RENDA_STOP
-                                    in_renda = False
                                 section.append(NoteTypes(int(note)))
-                                if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START,
-                                                            NoteTypes.BALLOON]:
+                                if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
                                     in_renda = True
-                                elif NoteTypes(int(note)) == NoteTypes.RENDA_STOP:
-                                    in_renda = False
                             except ValueError:
                                 section.append(NoteTypes.RENDA_STOP)
-                                in_renda = False
                     except IndexError:
                         pass
                     parse_beatmap.append(section.copy())
@@ -320,18 +311,11 @@ class TJAInfo(object):
                     try:
                         for note in findall("\d+", line)[0]:
                             try:
-                                if in_renda and NoteTypes(int(note)) not in [NoteTypes.RENDA_STOP, NoteTypes.NONE]:
-                                    section[-1] = NoteTypes.RENDA_STOP
-                                    in_renda = False
                                 section.append(NoteTypes(int(note)))
-                                if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START,
-                                                            NoteTypes.BALLOON]:
+                                if NoteTypes(int(note)) in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
                                     in_renda = True
-                                elif NoteTypes(int(note)) == NoteTypes.RENDA_STOP:
-                                    in_renda = False
                             except ValueError:
                                 section.append(NoteTypes.RENDA_STOP)
-                                in_renda = False
                     except IndexError:
                         pass
 
