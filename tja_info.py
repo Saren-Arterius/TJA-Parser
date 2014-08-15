@@ -346,11 +346,10 @@ class TJAInfo(object):
                                     in_renda = False
                         except IndexError:
                             pass
+
         if parse_course is None and parse_beatmap != []:
             beatmaps[3] = parse_beatmap
         for course, beatmap in enumerate(beatmaps):
-            near_notes = [[0, 0]] * 3
-            in_renda = False
             balloon_position = 0
             for index, section in enumerate(beatmap):
                 for index2, note in enumerate(section):
@@ -363,17 +362,6 @@ class TJAInfo(object):
                             beatmaps[course][index][index2] = Balloon(
                                 self.headers["BALLOONS"][course][-1])
                             self.headers["BALLOONS"][course].append(self.headers["BALLOONS"][course][-1])
-                    near_notes.pop(0)
-                    near_notes.append([index, index2])
-                    if in_renda and note not in [NoteTypes.RENDA_STOP, NoteTypes.NONE]:
-                        if len(beatmaps[course][near_notes[1][0]]) == 1:
-                            beatmaps[course][near_notes[1][0]].append(NoteTypes.RENDA_STOP)
-                        else:
-                            beatmaps[course][near_notes[1][0]][near_notes[1][1]] = NoteTypes.RENDA_STOP
-                        in_renda = False
-                    elif note in [NoteTypes.RENDA_START, NoteTypes.BIG_RENDA_START, NoteTypes.BALLOON]:
-                        in_renda = True
-
         return beatmaps
 
     def __simulate_play(self):
