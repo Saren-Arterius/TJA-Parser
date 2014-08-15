@@ -147,7 +147,7 @@ class TJAInfo(object):
                     else:
                         tja += str(note)
                 tja += ",\n"
-            tja += "\n#END"
+            tja += "\n#END\n"
         return tja
 
     def __get_donscore_details_text(self, course):
