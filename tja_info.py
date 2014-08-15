@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from multiprocessing.pool import Pool
-from fractions import Fraction
+from fractions import Fraction, gcd
 from binascii import crc32
 from os.path import dirname, join, abspath
 from enum import Enum
@@ -21,6 +21,7 @@ class TJAInfo(object):
     def __init__(self, tja):
         self.tja = tja
         self.renda_hits_per_second = 18
+        self.compress = False
         self.headers = self.__parse_headers()
         self.beatmaps = self.__parse_beatmaps()
         self.simulate_results = self.__simulate_play()
@@ -135,6 +136,8 @@ class TJAInfo(object):
             current_measure = 1
             cut_interval = 16
             for section in self.beatmaps[course]:
+                if self.compress:
+                    section = TJAInfo.compress_section(section)
                 pos = 0
                 if len(section) == 0:
                     tja += str(NoteTypes.NONE.value)
@@ -260,6 +263,8 @@ class TJAInfo(object):
                         self.renda_hits_per_second = float(renda[0])
                     except ValueError:
                         pass
+                elif line.startswith("//COMPRESS"):
+                    self.compress = True
                 continue
             keyval = findall("([A-Z]+):(.*)", line)
             if len(keyval) and keyval[0][0] == "COURSE":
@@ -430,6 +435,31 @@ class TJAInfo(object):
                                           round(highest_bpm) if highest_bpm.is_integer() else highest_bpm)
 
     @staticmethod
+    def compress_section(section):
+        new_section = []
+        start_pos = 0
+        min_dist = len(section)
+        note_pos = 0
+        for note in section:
+            if note_pos != start_pos and isinstance(note, NoteTypes) and note != NoteTypes.NONE:
+                min_dist = note_pos - start_pos if note_pos - start_pos < min_dist else min_dist
+                start_pos = note_pos
+            if isinstance(note, NoteTypes):
+                note_pos += 1
+        min_interval = gcd(min_dist, len(section))
+        note_pos = 0
+        for note in section:
+            if not isinstance(note, NoteTypes):
+                new_section.append(note)
+                continue
+            if note_pos % min_interval == 0:
+                new_section.append(note)
+                pass
+            if isinstance(note, NoteTypes):
+                note_pos += 1
+        return new_section
+
+    @staticmethod
     def parse_course(course):
         try:
             return int(course)
@@ -477,6 +507,8 @@ class TJAInfo(object):
         max_note_score = min(scores, key = lambda x: abs(x - max_score))
         return {"max_note_score": max_note_score, "score_init": scores[max_note_score][0],
                 "score_diff": scores[max_note_score][1]}
+
+        # Greatest common divisor of more than 2 numbers.  Am I terrible for doing it this way?
 
 
 class NoteTypes(Enum):
