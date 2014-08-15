@@ -32,10 +32,10 @@ class TJAInfo(object):
             return pool.map(self.get_donscore_png, range(0, 5))
 
     def get_donscore_png(self, course):
-        try:
-            assert self.headers["LEVELS"][course] is not None
-        except Exception:
+        if self.headers["LEVELS"][course] is None:
             return
+        if self.simulate_results[course]["max_combo"] > 50000:
+            raise Exception("Beatmap too long")
         from subprocess import call
         from shutil import copyfile, rmtree
         from PIL import Image, ImageFont, ImageDraw
