@@ -132,7 +132,7 @@ class TJAInfo(object):
             tja += "LEVEL:{0}\n".format(level)
             tja += "BALLOON:{0}\n".format(",".join([str(c) for c in self.headers["BALLOONS"][course]]))
             tja += "#START\n"
-            cut_interval = 16 * current_measure
+            cut_interval = 16
             for section in self.beatmaps[course]:
                 pos = 0
                 if len(section) == 0:
